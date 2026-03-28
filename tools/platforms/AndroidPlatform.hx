@@ -526,20 +526,6 @@ class AndroidPlatform extends PlatformTarget
 		context.ANDROID_TARGET_SDK_VERSION = project.config.getInt("android.target-sdk-version", 36);
 		context.ANDROID_EXTENSIONS = project.config.getArrayString("android.extension");
 		context.ANDROID_PERMISSIONS = project.config.getArrayString("android.permission", []);
-		context.ANDROID_PERMISSIONS = project.config.getArrayString("android.permission", [
-			"android.permission.WAKE_LOCK",
-			"android.permission.INTERNET",
-			"android.permission.VIBRATE",
-			"android.permission.ACCESS_NETWORK_STATE",
-			"android.permission.ACCESS_MEDIA_LOCATION",
-			"android.permission.MANAGE_EXTERNAL_STORAGE",
-			"android.permission.READ_MEDIA_IMAGES",
-			"android.permission.READ_MEDIA_VIDEO",
-			"android.permission.READ_MEDIA_AUDIO",
-			"android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-			"android.permission.READ_EXTERNAL_STORAGE",
-			"android.permission.WRITE_EXTERNAL_STORAGE"
-		]);
 		context.ANDROID_GRADLE_VERSION = project.config.getString("android.gradle-version", "8.13");
 		context.ANDROID_GRADLE_PLUGIN = project.config.getString("android.gradle-plugin", "8.12.0");
 		context.ANDROID_USE_ANDROIDX = project.config.getString("android.useAndroidX", "true");
