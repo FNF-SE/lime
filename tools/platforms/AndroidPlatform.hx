@@ -509,7 +509,6 @@ class AndroidPlatform extends PlatformTarget
 					{
 						var padContext:Dynamic = {};
 						padContext.ANDROID_PLAY_ASSETS_DELIVERY_PACK = asset.deliveryPackName;
-						var gradleProject = project.config.getString("android.gradle-project-directory", "bin");
 						System.copyFileTemplate(project.templatePaths, "android/asset-pack/build.gradle", targetDirectory + "/" + gradleProject + "/" + asset.deliveryPackName + "/build.gradle", padContext);
 
 						context.ANDROID_PLAY_ASSETS_DELIVERY_PACKS.push(asset.deliveryPackName);
@@ -526,6 +525,7 @@ class AndroidPlatform extends PlatformTarget
 		context.ANDROID_MINIMUM_SDK_VERSION = project.config.getInt("android.minimum-sdk-version", 26);
 		context.ANDROID_TARGET_SDK_VERSION = project.config.getInt("android.target-sdk-version", 36);
 		context.ANDROID_EXTENSIONS = project.config.getArrayString("android.extension");
+		context.ANDROID_PERMISSIONS = project.config.getArrayString("android.permission", []);
 		context.ANDROID_PERMISSIONS = project.config.getArrayString("android.permission", [
 			"android.permission.WAKE_LOCK",
 			"android.permission.INTERNET",

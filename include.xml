@@ -164,6 +164,28 @@
 		<define name="MACOSX_DEPLOYMENT_TARGET" value="11.0" if="mac" unless="MACOSX_DEPLOYMENT_TARGET" />
 		<setenv name="MACOSX_DEPLOYMENT_TARGET" value="${MACOSX_DEPLOYMENT_TARGET}" if="mac" />
 
+		<section if="android">
+			<config:android>
+				<manifest>
+					<uses-permission android:name="android.permission.WAKE_LOCK" />
+					<uses-permission android:name="android.permission.INTERNET" />
+					<uses-permission android:name="android.permission.VIBRATE" />
+					<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+					<uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+					<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+					<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+					<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+					<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+					<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+					<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+					<uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+					<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+					<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+					<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+				</manifest>
+			</config:android>
+		</section>
+
 		<section if="emscripten">
 
 			<dependency name="pthread" />
