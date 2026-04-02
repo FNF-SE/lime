@@ -14,7 +14,7 @@
 /* #undef HAVE_PTHREAD_NP_H */
 
 /* Define if we have cpuid.h */
-#if !defined(HXCPP_ARMV7) && !defined(HXCPP_ARM64)
+#if defined(__i386__) || defined(__x86_64__)
 #define HAVE_CPUID_H
 #endif
 
@@ -25,7 +25,7 @@
 /* #undef HAVE_GUIDDEF_H */
 
 /* Define if we have GCC's __get_cpuid() */
-#if !defined(HXCPP_ARMV7) && !defined(HXCPP_ARM64)
+#if defined(__i386__) || defined(__x86_64__)
 #define HAVE_GCC_GET_CPUID
 #endif
 
