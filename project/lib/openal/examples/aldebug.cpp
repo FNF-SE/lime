@@ -24,38 +24,49 @@
 
 /* This file contains an example for using the debug extension. */
 
+#include "config.h"
+
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstdio>
+#include <iostream>
 #include <memory>
+#include <ranges>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include "AL/al.h"
+#include "alnumeric.h"
+#include "fmt/base.h"
+#include "fmt/ostream.h"
+#include "fmt/std.h"
+
+#include "common/alhelpers.h"
+#include "win_main_utf8.h"
+
+#if HAVE_CXXMODULES
+import gsl;
+import openal;
+
+#else
+
 #include "AL/alc.h"
+#include "AL/al.h"
 #include "AL/alext.h"
 
-#include "alnumeric.h"
-#include "alspan.h"
-#include "fmt/core.h"
-
-#include "win_main_utf8.h"
+#include "gsl/gsl"
+#endif
 
 namespace {
 
 using namespace std::string_view_literals;
 
-struct DeviceCloser {
-    void operator()(ALCdevice *device) const noexcept { alcCloseDevice(device); }
-};
-using DevicePtr = std::unique_ptr<ALCdevice,DeviceCloser>;
+using DevicePtr = std::unique_ptr<ALCdevice, decltype([](ALCdevice *device)
+    { alcCloseDevice(device); })>;
 
-struct ContextDestroyer {
-    void operator()(ALCcontext *context) const noexcept { alcDestroyContext(context); }
-};
-using ContextPtr = std::unique_ptr<ALCcontext,ContextDestroyer>;
+using ContextPtr = std::unique_ptr<ALCcontext, decltype([](ALCcontext *context)
+    { alcDestroyContext(context); })>;
 
 
 constexpr auto GetDebugSourceName(ALenum source) noexcept -> std::string_view
@@ -100,24 +111,13 @@ constexpr auto GetDebugSeverityName(ALenum severity) noexcept -> std::string_vie
     return "<invalid severity>"sv;
 }
 
-auto alDebugMessageCallbackEXT = LPALDEBUGMESSAGECALLBACKEXT{};
-auto alDebugMessageInsertEXT = LPALDEBUGMESSAGEINSERTEXT{};
-auto alDebugMessageControlEXT = LPALDEBUGMESSAGECONTROLEXT{};
-auto alPushDebugGroupEXT = LPALPUSHDEBUGGROUPEXT{};
-auto alPopDebugGroupEXT = LPALPOPDEBUGGROUPEXT{};
-auto alGetDebugMessageLogEXT = LPALGETDEBUGMESSAGELOGEXT{};
-auto alObjectLabelEXT = LPALOBJECTLABELEXT{};
-auto alGetObjectLabelEXT = LPALGETOBJECTLABELEXT{};
-auto alGetPointerEXT = LPALGETPOINTEREXT{};
-auto alGetPointervEXT = LPALGETPOINTERVEXT{};
 
-
-int main(al::span<std::string_view> args)
+auto main(std::span<std::string_view> args) -> int
 {
     /* Print out usage if -h was specified */
     if(args.size() > 1 && (args[1] == "-h" || args[1] == "--help"))
     {
-        fmt::println(stderr, "Usage: {} [-device <name>] [-nodebug]", args[0]);
+        fmt::println(std::cerr, "Usage: {} [-device <name>] [-nodebug]", args[0]);
         return 1;
     }
 
@@ -129,36 +129,22 @@ int main(al::span<std::string_view> args)
     {
         device = DevicePtr{alcOpenDevice(std::string{args[1]}.c_str())};
         if(!device)
-            fmt::println(stderr, "Failed to open \"{}\", trying default", args[1]);
+            fmt::println(std::cerr, "Failed to open \"{}\", trying default", args[1]);
         args = args.subspan(2);
     }
     if(!device)
         device = DevicePtr{alcOpenDevice(nullptr)};
     if(!device)
     {
-        fmt::println(stderr, "Could not open a device!");
+        fmt::println(std::cerr, "Could not open a device!");
         return 1;
     }
 
     if(!alcIsExtensionPresent(device.get(), "ALC_EXT_debug"))
     {
-        fmt::println(stderr, "ALC_EXT_debug not supported on device");
+        fmt::println(std::cerr, "ALC_EXT_debug not supported on device");
         return 1;
     }
-
-    /* Load the Debug API functions we're using. */
-#define LOAD_PROC(N) N = reinterpret_cast<decltype(N)>(alcGetProcAddress(device.get(), #N))
-    LOAD_PROC(alDebugMessageCallbackEXT);
-    LOAD_PROC(alDebugMessageInsertEXT);
-    LOAD_PROC(alDebugMessageControlEXT);
-    LOAD_PROC(alPushDebugGroupEXT);
-    LOAD_PROC(alPopDebugGroupEXT);
-    LOAD_PROC(alGetDebugMessageLogEXT);
-    LOAD_PROC(alObjectLabelEXT);
-    LOAD_PROC(alGetObjectLabelEXT);
-    LOAD_PROC(alGetPointerEXT);
-    LOAD_PROC(alGetPointervEXT);
-#undef LOAD_PROC
 
     /* Create a debug context and set it as current. If -nodebug was specified,
      * create a non-debug context (to see how debug messages react).
@@ -167,16 +153,18 @@ int main(al::span<std::string_view> args)
     if(!args.empty() && args[0] == "-nodebug")
         flags &= ~ALC_CONTEXT_DEBUG_BIT_EXT;
 
-    const auto attribs = std::array<ALCint,3>{{
+    const auto attribs = std::to_array<ALCint>({
         ALC_CONTEXT_FLAGS_EXT, flags,
         0 /* end-of-list */
-    }};
+    });
     auto context = ContextPtr{alcCreateContext(device.get(), attribs.data())};
     if(!context || alcMakeContextCurrent(context.get()) == ALC_FALSE)
     {
-        fmt::println(stderr, "Could not create and set a context!");
+        fmt::println(std::cerr, "Could not create and set a context!");
         return 1;
     }
+
+    LoadALExtensions();
 
     /* Enable low-severity debug messages, which are disabled by default. */
     alDebugMessageControlEXT(AL_DONT_CARE_EXT, AL_DONT_CARE_EXT, AL_DEBUG_SEVERITY_LOW_EXT, 0,
@@ -210,7 +198,7 @@ int main(al::span<std::string_view> args)
 
     for(auto numlogs = alGetInteger(AL_DEBUG_LOGGED_MESSAGES_EXT);numlogs > 0;--numlogs)
     {
-        auto message = std::vector<char>(static_cast<ALuint>(maxloglength), '\0');
+        auto message = std::vector(gsl::narrow<ALuint>(maxloglength), '\0');
         auto source = ALenum{};
         auto type = ALenum{};
         auto id = ALuint{};
@@ -222,7 +210,7 @@ int main(al::span<std::string_view> args)
             &msglength, message.data());
         if(read != 1)
         {
-            fmt::println(stderr, "Read {} debug messages, expected to read 1", read);
+            fmt::println(std::cerr, "Read {} debug messages, expected to read 1", read);
             break;
         }
 
@@ -232,7 +220,7 @@ int main(al::span<std::string_view> args)
          * the offset to the next message.
          */
         const auto msgstr = std::string_view{message.data(),
-            static_cast<ALuint>(msglength ? msglength-1 : 0)};
+            gsl::narrow<ALuint>(msglength ? msglength-1 : 0)};
         fmt::println("Got message from log:\n"
             "  Source: {}\n"
             "  Type: {}\n"
@@ -253,7 +241,7 @@ int main(al::span<std::string_view> args)
         /* The message length provided to the callback does not include the
          * null terminator.
          */
-        const auto msgstr = std::string_view{message, static_cast<ALuint>(length)};
+        const auto msgstr = std::string_view{message, gsl::narrow<ALuint>(length)};
         fmt::println("Got message from callback:\n"
             "  Source: {}\n"
             "  Type: {}\n"
@@ -265,13 +253,13 @@ int main(al::span<std::string_view> args)
     alDebugMessageCallbackEXT(debug_callback, nullptr);
 
     if(const auto numlogs = alGetInteger(AL_DEBUG_LOGGED_MESSAGES_EXT))
-        fmt::println(stderr, "{} left over logged message{}!", numlogs, (numlogs==1)?"":"s");
+        fmt::println(std::cerr, "{} left over logged message{}!", numlogs, (numlogs==1)?"":"s");
 
     /* This should also generate a deprecation debug message, which will now go
      * through the callback.
      */
     fmt::println("Calling alGetInteger(AL_DOPPLER_VELOCITY)...");
-    auto dv [[maybe_unused]] = alGetInteger(AL_DOPPLER_VELOCITY);
+    std::ignore = alGetInteger(AL_DOPPLER_VELOCITY);
     fmt::println("");
 
     /* These functions are notoriously unreliable for their behavior, they will
@@ -280,7 +268,7 @@ int main(al::span<std::string_view> args)
     fmt::println("Calling alcSuspendContext and alcProcessContext...");
     alcSuspendContext(context.get());
     alcProcessContext(context.get());
-    fputs("\n", stdout);
+    fmt::println("");
 
     fmt::println("Pushing a debug group, making some invalid calls, and popping the debug group...");
     alPushDebugGroupEXT(AL_DEBUG_SOURCE_APPLICATION_EXT, 0, -1, "Error test group");
@@ -304,8 +292,7 @@ int main(al::span<std::string_view> args)
 
 int main(int argc, char **argv)
 {
-    assert(argc >= 0);
-    auto args = std::vector<std::string_view>(static_cast<unsigned int>(argc));
-    std::copy_n(argv, args.size(), args.begin());
-    return main(al::span{args});
+    auto args = std::vector<std::string_view>(gsl::narrow<unsigned int>(argc));
+    std::ranges::copy(std::views::counted(argv, argc), args.begin());
+    return main(std::span{args});
 }

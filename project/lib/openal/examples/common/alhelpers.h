@@ -3,10 +3,80 @@
 
 #include "AL/al.h"
 #include "AL/alc.h"
+#include "AL/alext.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* ALC_EXT_EFX */
+extern LPALGENFILTERS alGenFilters;
+extern LPALDELETEFILTERS alDeleteFilters;
+extern LPALISFILTER alIsFilter;
+extern LPALFILTERI alFilteri;
+extern LPALFILTERIV alFilteriv;
+extern LPALFILTERF alFilterf;
+extern LPALFILTERFV alFilterfv;
+extern LPALGETFILTERI alGetFilteri;
+extern LPALGETFILTERIV alGetFilteriv;
+extern LPALGETFILTERF alGetFilterf;
+extern LPALGETFILTERFV alGetFilterfv;
+extern LPALGENEFFECTS alGenEffects;
+extern LPALDELETEEFFECTS alDeleteEffects;
+extern LPALISEFFECT alIsEffect;
+extern LPALEFFECTI alEffecti;
+extern LPALEFFECTIV alEffectiv;
+extern LPALEFFECTF alEffectf;
+extern LPALEFFECTFV alEffectfv;
+extern LPALGETEFFECTI alGetEffecti;
+extern LPALGETEFFECTIV alGetEffectiv;
+extern LPALGETEFFECTF alGetEffectf;
+extern LPALGETEFFECTFV alGetEffectfv;
+extern LPALGENAUXILIARYEFFECTSLOTS alGenAuxiliaryEffectSlots;
+extern LPALDELETEAUXILIARYEFFECTSLOTS alDeleteAuxiliaryEffectSlots;
+extern LPALISAUXILIARYEFFECTSLOT alIsAuxiliaryEffectSlot;
+extern LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti;
+extern LPALAUXILIARYEFFECTSLOTIV alAuxiliaryEffectSlotiv;
+extern LPALAUXILIARYEFFECTSLOTF alAuxiliaryEffectSlotf;
+extern LPALAUXILIARYEFFECTSLOTFV alAuxiliaryEffectSlotfv;
+extern LPALGETAUXILIARYEFFECTSLOTI alGetAuxiliaryEffectSloti;
+extern LPALGETAUXILIARYEFFECTSLOTIV alGetAuxiliaryEffectSlotiv;
+extern LPALGETAUXILIARYEFFECTSLOTF alGetAuxiliaryEffectSlotf;
+extern LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv;
+
+/* AL_EXT_debug */
+extern LPALDEBUGMESSAGECALLBACKEXT alDebugMessageCallbackEXT;
+extern LPALDEBUGMESSAGEINSERTEXT alDebugMessageInsertEXT;
+extern LPALDEBUGMESSAGECONTROLEXT alDebugMessageControlEXT;
+extern LPALPUSHDEBUGGROUPEXT alPushDebugGroupEXT;
+extern LPALPOPDEBUGGROUPEXT alPopDebugGroupEXT;
+extern LPALGETDEBUGMESSAGELOGEXT alGetDebugMessageLogEXT;
+extern LPALOBJECTLABELEXT alObjectLabelEXT;
+extern LPALGETOBJECTLABELEXT alGetObjectLabelEXT;
+extern LPALGETPOINTEREXT alGetPointerEXT;
+extern LPALGETPOINTERVEXT alGetPointervEXT;
+
+/* AL_SOFT_source_latency */
+extern LPALSOURCEDSOFT alSourcedSOFT;
+extern LPALSOURCE3DSOFT alSource3dSOFT;
+extern LPALSOURCEDVSOFT alSourcedvSOFT;
+extern LPALGETSOURCEDSOFT alGetSourcedSOFT;
+extern LPALGETSOURCE3DSOFT alGetSource3dSOFT;
+extern LPALGETSOURCEDVSOFT alGetSourcedvSOFT;
+extern LPALSOURCEI64SOFT alSourcei64SOFT;
+extern LPALSOURCE3I64SOFT alSource3i64SOFT;
+extern LPALSOURCEI64VSOFT alSourcei64vSOFT;
+extern LPALGETSOURCEI64SOFT alGetSourcei64SOFT;
+extern LPALGETSOURCE3I64SOFT alGetSource3i64SOFT;
+extern LPALGETSOURCEI64VSOFT alGetSourcei64vSOFT;
+
+/* AL_SOFT_events */
+extern LPALEVENTCONTROLSOFT alEventControlSOFT;
+extern LPALEVENTCALLBACKSOFT alEventCallbackSOFT;
+
+/* AL_SOFT_callback_buffer */
+extern LPALBUFFERCALLBACKSOFT alBufferCallbackSOFT;
+
 
 /* Some helper functions to get the name from the format enums. */
 const char *FormatName(ALenum format);
@@ -14,6 +84,9 @@ const char *FormatName(ALenum format);
 /* Easy device init/deinit functions. InitAL returns 0 on success. */
 int InitAL(char ***argv, int *argc);
 void CloseAL(void);
+
+/* Load AL extension functions for the current context. */
+void LoadALExtensions(void);
 
 /* Cross-platform timeget and sleep functions. */
 int altime_get(void);
@@ -34,54 +107,6 @@ void al_nssleep(unsigned long nsec);
 
 #ifdef __cplusplus
 } // extern "C"
-
-#include <cstdio>
-#include <string>
-#include <string_view>
-
-#include "alspan.h"
-#include "fmt/core.h"
-
-int InitAL(al::span<std::string_view> &args)
-{
-    ALCdevice *device{};
-
-    /* Open and initialize a device */
-    if(args.size() > 1 && args[0] == "-device")
-    {
-        device = alcOpenDevice(std::string{args[1]}.c_str());
-        if(!device)
-            fmt::println(stderr, "Failed to open \"{}\", trying default", args[1]);
-        args = args.subspan(2);
-    }
-    if(!device)
-        device = alcOpenDevice(nullptr);
-    if(!device)
-    {
-        fmt::println(stderr, "Could not open a device!");
-        return 1;
-    }
-
-    ALCcontext *ctx{alcCreateContext(device, nullptr)};
-    if(!ctx || alcMakeContextCurrent(ctx) == ALC_FALSE)
-    {
-        if(ctx)
-            alcDestroyContext(ctx);
-        alcCloseDevice(device);
-        fmt::println(stderr, "Could not set a context!");
-        return 1;
-    }
-
-    const ALCchar *name{};
-    if(alcIsExtensionPresent(device, "ALC_ENUMERATE_ALL_EXT"))
-        name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
-    if(!name || alcGetError(device) != AL_NO_ERROR)
-        name = alcGetString(device, ALC_DEVICE_SPECIFIER);
-    fmt::println("Opened \"{}\"", name);
-
-    return 0;
-}
-
 #endif
 
 #endif /* ALHELPERS_H */

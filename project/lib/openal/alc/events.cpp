@@ -3,91 +3,115 @@
 
 #include "events.h"
 
+#include <ranges>
+#include <span>
+
 #include "alnumeric.h"
-#include "alspan.h"
-#include "core/logging.h"
 #include "device.h"
-#include "fmt/core.h"
+#include "opthelpers.h"
+
+#if HAVE_CXXMODULES
+import gsl;
+import logging;
+#else
+#include "core/logging.h"
+#include "gsl/gsl"
+#endif
 
 
 namespace {
 
-ALCenum EnumFromEventType(const alc::EventType type)
+#if defined(__linux__) && !defined(AL_LIBTYPE_STATIC) && HAS_ATTRIBUTE(gnu::alias)
+#define DefineAlcAlias(X) extern "C" DECL_HIDDEN [[gnu::alias(#X)]] decltype(X) X##_;
+#else
+#define DefineAlcAlias(X)
+#endif
+
+using EventBitSet = al::bitset<alc::EventType>;
+auto gEventsEnabled = EventBitSet{0};
+
+auto EnumFromEventType(const alc::EventType type) -> ALCenum
 {
     switch(type)
     {
     case alc::EventType::DefaultDeviceChanged: return ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT;
     case alc::EventType::DeviceAdded: return ALC_EVENT_TYPE_DEVICE_ADDED_SOFT;
     case alc::EventType::DeviceRemoved: return ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT;
-    case alc::EventType::Count: break;
     }
-    throw std::runtime_error{fmt::format("Invalid EventType: {}", int{al::to_underlying(type)})};
+    throw std::runtime_error{al::format("Invalid EventType: {}", int{al::to_underlying(type)})};
 }
 
 } // namespace
 
 namespace alc {
 
-std::optional<alc::EventType> GetEventType(ALCenum type)
+auto GetEventType(ALCenum const type) -> std::optional<EventType>
 {
     switch(type)
     {
-    case ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT: return alc::EventType::DefaultDeviceChanged;
-    case ALC_EVENT_TYPE_DEVICE_ADDED_SOFT: return alc::EventType::DeviceAdded;
-    case ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT: return alc::EventType::DeviceRemoved;
+    case ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT: return EventType::DefaultDeviceChanged;
+    case ALC_EVENT_TYPE_DEVICE_ADDED_SOFT: return EventType::DeviceAdded;
+    case ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT: return EventType::DeviceRemoved;
     }
     return std::nullopt;
 }
 
-void Event(EventType eventType, DeviceType deviceType, ALCdevice *device, std::string_view message) noexcept
+void Event(EventType const eventType, DeviceType const deviceType, ALCdevice *const device,
+    std::string_view const message) noexcept
 {
     auto eventlock = std::unique_lock{EventMutex};
-    if(EventCallback && EventsEnabled.test(al::to_underlying(eventType)))
+    if(EventCallback && gEventsEnabled.test(eventType))
         EventCallback(EnumFromEventType(eventType), al::to_underlying(deviceType), device,
-            static_cast<ALCsizei>(message.length()), message.data(), EventUserPtr);
+            /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
+            al::saturate_cast<ALCsizei>(message.size()), message.data(), EventUserPtr);
 }
 
-} // namespace alc
+} /* namespace alc */
 
-FORCE_ALIGN ALCboolean ALC_APIENTRY alcEventControlSOFT(ALCsizei count, const ALCenum *events,
-    ALCboolean enable) noexcept
+FORCE_ALIGN auto ALC_APIENTRY alcEventControlSOFT(ALCsizei count, const ALCenum *events,
+    ALCboolean enable) noexcept -> ALCboolean
 {
     if(enable != ALC_FALSE && enable != ALC_TRUE)
     {
-        alcSetError(nullptr, ALC_INVALID_ENUM);
+        al::Device::SetGlobalError(ALC_INVALID_ENUM);
         return ALC_FALSE;
     }
     if(count < 0)
     {
-        alcSetError(nullptr, ALC_INVALID_VALUE);
+        al::Device::SetGlobalError(ALC_INVALID_VALUE);
         return ALC_FALSE;
     }
     if(count == 0)
         return ALC_TRUE;
     if(!events)
     {
-        alcSetError(nullptr, ALC_INVALID_VALUE);
+        al::Device::SetGlobalError(ALC_INVALID_VALUE);
         return ALC_FALSE;
     }
 
-    alc::EventBitSet eventSet{0};
-    for(ALCenum type : al::span{events, static_cast<ALCuint>(count)})
+    auto eventSet = EventBitSet{};
+    auto eventrange = std::views::counted(events, count);
+    const auto invalidevent = std::ranges::find_if_not(eventrange, [&eventSet](ALCenum const type)
     {
-        auto etype = alc::GetEventType(type);
-        if(!etype)
-        {
-            WARN("Invalid event type: {:#04x}", as_unsigned(type));
-            alcSetError(nullptr, ALC_INVALID_ENUM);
-            return ALC_FALSE;
-        }
-        eventSet.set(al::to_underlying(*etype));
+        const auto etype = alc::GetEventType(type);
+        if(!etype) return false;
+
+        eventSet.set(*etype);
+        return true;
+    });
+    if(invalidevent != eventrange.end())
+    {
+        WARN("Invalid event type: {:#04x}", as_unsigned(*invalidevent));
+        al::Device::SetGlobalError(ALC_INVALID_ENUM);
+        return ALC_FALSE;
     }
 
     auto eventlock = std::unique_lock{alc::EventMutex};
-    if(enable) alc::EventsEnabled |= eventSet;
-    else alc::EventsEnabled &= ~eventSet;
+    if(enable) gEventsEnabled |= eventSet;
+    else gEventsEnabled &= ~eventSet;
     return ALC_TRUE;
 }
+DefineAlcAlias(alcEventControlSOFT)
 
 FORCE_ALIGN void ALC_APIENTRY alcEventCallbackSOFT(ALCEVENTPROCTYPESOFT callback, void *userParam) noexcept
 {
@@ -95,3 +119,4 @@ FORCE_ALIGN void ALC_APIENTRY alcEventCallbackSOFT(ALCEVENTPROCTYPESOFT callback
     alc::EventCallback = callback;
     alc::EventUserPtr = userParam;
 }
+DefineAlcAlias(alcEventCallbackSOFT)
