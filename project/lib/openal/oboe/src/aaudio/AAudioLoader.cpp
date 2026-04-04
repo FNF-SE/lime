@@ -587,7 +587,7 @@ AAudioLoader::signature_I_PSCPM AAudioLoader::load_I_PSCPM(const char *functionN
 
 // The aaudio device type and aaudio policy were added in NDK 29,
 // which is the first version to support Android B (API 36).
-#if __NDK_MAJOR__ >= 29
+#if __NDK_MAJOR__ >= 29 && !defined(__arm__)
 
     #if __NDK_MAJOR__ < 30
     ASSERT_INT32(AAudio_DeviceType);
