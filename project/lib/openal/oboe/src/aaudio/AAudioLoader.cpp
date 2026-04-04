@@ -587,11 +587,9 @@ AAudioLoader::signature_I_PSCPM AAudioLoader::load_I_PSCPM(const char *functionN
 
 // The aaudio device type and aaudio policy were added in NDK 29,
 // which is the first version to support Android B (API 36).
-#if __NDK_MAJOR__ >= 29 && !defined(__arm__)
+#if __NDK_MAJOR__ >= 30
 
-    #if __NDK_MAJOR__ < 30
-    ASSERT_INT32(AAudio_DeviceType);
-    #endif
+    //ASSERT_INT32(AAudio_DeviceType);
     static_assert((int32_t)DeviceType::BuiltinEarpiece == AAUDIO_DEVICE_BUILTIN_EARPIECE, ERRMSG);
     static_assert((int32_t)DeviceType::BuiltinSpeaker == AAUDIO_DEVICE_BUILTIN_SPEAKER, ERRMSG);
     static_assert((int32_t)DeviceType::WiredHeadset == AAUDIO_DEVICE_WIRED_HEADSET, ERRMSG);
@@ -629,7 +627,7 @@ AAudioLoader::signature_I_PSCPM AAudioLoader::load_I_PSCPM(const char *functionN
     static_assert((int32_t)MMapPolicy::Auto == AAUDIO_POLICY_AUTO, ERRMSG);
     static_assert((int32_t)MMapPolicy::Always == AAUDIO_POLICY_ALWAYS, ERRMSG);
 
-#endif // __NDK_MAJOR__ >= 29
+#endif // __NDK_MAJOR__ >= 30
 
 #endif // AAUDIO_AAUDIO_H
 
