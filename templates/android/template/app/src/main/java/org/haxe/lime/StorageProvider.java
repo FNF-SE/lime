@@ -34,7 +34,7 @@ public class StorageProvider extends DocumentsProvider {
 
     private static final String ALL_MIME_TYPES = "*/*";
 
-    private File BASE_DIR; // kill me later - Lily
+    private File BASE_DIR; // kill me later - Homura
 
     // The default columns to return information about a root if no specific
     // columns are requested in a query.
