@@ -24,6 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:shrinkColumns="1"
+            android:background="#00FFFFFF"
             >
 
             <TableRow>
@@ -53,10 +54,15 @@
                     android:layout_height="wrap_content"
                     android:text="Device: " />
 
-                <com.google.sample.audio_device.AudioDeviceSpinner
+                <com.mobileer.audio_device.AudioDeviceSpinner
                     android:id="@+id/devices_spinner"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
+                <TextView
+                    android:id="@+id/actualDeviceId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
 
             </TableRow>
 
@@ -98,6 +104,27 @@
 
                 <TextView
                     android:id="@+id/actualChannelCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/channel_mask_prompt" />
+
+                <Spinner
+                    android:id="@+id/spinnerChannelMask"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:prompt="@string/channel_mask_prompt" />
+
+                <TextView
+                    android:id="@+id/actualChannelMask"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="\?" />
@@ -169,6 +196,137 @@
                     android:text="\?" />
 
             </TableRow>
+
+            <TableRow
+                android:id="@+id/rowUsage">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/usage_prompt"/>
+
+                <Spinner
+                    android:id="@+id/spinnerUsage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/audio_usages" />
+
+                <TextView
+                    android:id="@+id/actualUsage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/rowContentType">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Content Type:"/>
+
+                <Spinner
+                    android:id="@+id/spinnerContentType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/audio_content_types" />
+
+                <TextView
+                    android:id="@+id/actualContentType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/capacity_prompt" />
+
+                <Spinner
+                    android:id="@+id/spinnerCapacity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/capacity_values" />
+
+                <TextView
+                    android:id="@+id/actualCapacity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/rowSpatializationBehavior">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/spatialization_behavior_prompt"/>
+
+                <Spinner
+                    android:id="@+id/spinnerSpatializationBehavior"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/spatialization_behaviors" />
+
+                <TextView
+                    android:id="@+id/actualSpatializationBehavior"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/rowPackageName">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/package_name_prompt"/>
+
+                <Spinner
+                    android:id="@+id/spinnerPackageName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/package_name_values" />
+
+                <TextView
+                    android:id="@+id/actualPackageName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/rowAttributionTag">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/attribution_tag_prompt"/>
+
+                <Spinner
+                    android:id="@+id/spinnerAttributionTag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/attribution_tag_values" />
+
+                <TextView
+                    android:id="@+id/actualAttributionTag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\?" />
+
+            </TableRow>
         </TableLayout>
 
         <LinearLayout
@@ -212,18 +370,92 @@
             android:orientation="horizontal">
 
             <CheckBox
+                android:id="@+id/requestSessionId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10sp"
+                android:text="Session Id" />
+
+            <TextView
+                android:id="@+id/sessionId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12sp"
+                android:text="\?" />
+
+            <CheckBox
                 android:id="@+id/requestAudioEffect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="10sp"
                 android:text="Effect" />
 
-            <TextView
-                android:id="@+id/sessionId"
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/inputEffects"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <CheckBox
+                android:id="@+id/checkBoxAutomaticGainControl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="\?" />
+                android:layout_marginRight="8sp"
+                android:text="AGC" />
 
+            <CheckBox
+                android:id="@+id/checkBoxAcousticEchoCanceler"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8sp"
+                android:text="AEC" />
+
+            <CheckBox
+                android:id="@+id/checkBoxNoiseSuppressor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8sp"
+                android:text="NoNoise" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/outputEffects"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone">
+
+            <CheckBox
+                android:id="@+id/checkBoxBassBoost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8sp"
+                android:text="Bass Boost" />
+
+            <SeekBar
+                android:id="@+id/seekBarBassBoost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="1000"
+                android:progress="0" />
+
+            <CheckBox
+                android:id="@+id/checkBoxLoudnessEnhancer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8sp"
+                android:text="Loudness Enhancer" />
+
+            <SeekBar
+                android:id="@+id/seekBarLoudnessEnhancer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="5000"
+                android:progress="0" />
         </LinearLayout>
 
         <LinearLayout
@@ -266,13 +498,14 @@
             android:id="@+id/streamInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:lines="2"
             android:text="info:" />
 
         <TextView
             android:id="@+id/statusView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:lines="3"
+            android:lines="6"
             android:text="@string/init_status" />
     </LinearLayout>
 
