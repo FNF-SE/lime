@@ -60,10 +60,31 @@ auto OboePlayback::onAudioReady(oboe::AudioStream *const oboeStream, void *const
 
 void OboePlayback::onErrorAfterClose(oboe::AudioStream*, oboe::Result const error)
 {
+    TRACE("Error was {}", oboe::convertToText(error));
+
     if(error == oboe::Result::ErrorDisconnected)
+    {
+        /* The audio device changed (e.g. headphones plugged/unplugged).
+         * Attempt to reopen the stream on the new default device before
+         * treating this as a fatal disconnect. */
+        TRACE("Stream disconnected, attempting restart on new device...");
+        try
+        {
+            if(reset())
+            {
+                start();
+                return; // successfully switched to new device
+            }
+        }
+        catch(al::backend_exception& e)
+        {
+            ERR("Failed to restart stream after disconnect: {}", e.what());
+        }
+
+        /* Restart failed, propagate as a real device error. */
         mDevice->handleDisconnect("Oboe AudioStream was disconnected: {}",
             oboe::convertToText(error));
-    TRACE("Error was {}", oboe::convertToText(error));
+    }
 }
 
 void OboePlayback::open(std::string_view name)
@@ -92,6 +113,12 @@ void OboePlayback::open(std::string_view name)
 
 auto OboePlayback::reset() -> bool
 {
+    if(mStream)
+    {
+        mStream->close();
+        mStream.reset();
+    }
+
     auto builder = oboe::AudioStreamBuilder{};
     builder.setDirection(oboe::Direction::Output);
     builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
