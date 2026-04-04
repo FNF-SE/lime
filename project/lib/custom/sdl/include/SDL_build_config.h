@@ -530,6 +530,8 @@
  */
 #define SDL_AUDIO_DRIVER_ALSA 1                                  /**< ALSA (Advanced Linux Sound Architecture) audio driver */
 #define SDL_AUDIO_DRIVER_ALSA_DYNAMIC "libasound.so.2"           /**< Dynamically loaded ALSA shared library */
+#define SDL_AUDIO_DRIVER_JACK 1                                  /**< JACK Audio Connection Kit audio driver */
+#define SDL_AUDIO_DRIVER_JACK_DYNAMIC "libjack.so.0"             /**< Dynamically loaded JACK client library */
 #define SDL_AUDIO_DRIVER_PIPEWIRE 1                              /**< PipeWire (modern multimedia server for audio/video on Linux) */
 #define SDL_AUDIO_DRIVER_PIPEWIRE_DYNAMIC "libpipewire-0.3.so.0" /**< Dynamically loaded PipeWire client library */
 #define SDL_AUDIO_DRIVER_PULSEAUDIO 1                            /**< PulseAudio sound server audio driver */

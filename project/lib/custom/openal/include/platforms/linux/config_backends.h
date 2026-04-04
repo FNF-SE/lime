@@ -1,6 +1,6 @@
 #define HAVE_ALSA 1
 
-#define HAVE_OSS 0
+#define HAVE_OSS 1
 
 #define HAVE_PIPEWIRE 1
 
@@ -18,7 +18,7 @@
 
 #define HAVE_PULSEAUDIO 1
 
-#define HAVE_JACK 0
+#define HAVE_JACK 1
 
 #define HAVE_COREAUDIO 0
 

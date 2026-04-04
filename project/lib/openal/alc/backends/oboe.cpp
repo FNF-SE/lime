@@ -12,6 +12,7 @@
 #include "ringbuffer.h"
 
 #include "oboe/Oboe.h"
+#include <android/api-level.h>
 
 #if HAVE_CXXMODULES
 import logging;
@@ -43,6 +44,11 @@ struct OboePlayback final : BackendBase, oboe::AudioStreamCallback {
     void stop() override;
 };
 
+void applyApiPolicy(oboe::AudioStreamBuilder& builder) noexcept
+{
+    if (android_get_device_api_level() <= 30)
+        builder.setAudioApi(oboe::AudioApi::OpenSLES);
+}
 
 auto OboePlayback::onAudioReady(oboe::AudioStream *const oboeStream, void *const audioData,
     int32_t const numFrames) -> oboe::DataCallbackResult
@@ -70,9 +76,13 @@ void OboePlayback::open(std::string_view name)
 
     /* Open a basic output stream, just to ensure it can work. */
     auto stream = std::shared_ptr<oboe::AudioStream>{};
-    const auto result = oboe::AudioStreamBuilder{}.setDirection(oboe::Direction::Output)
-        ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
-        ->openStream(stream);
+    auto builder = oboe::AudioStreamBuilder{};
+    builder.setDirection(oboe::Direction::Output)
+           ->setPerformanceMode(oboe::PerformanceMode::LowLatency);
+
+    applyApiPolicy(builder);
+
+    const auto result = builder.openStream(stream);
     if(result != oboe::Result::OK)
         throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: {}",
             oboe::convertToText(result)};
@@ -93,6 +103,8 @@ auto OboePlayback::reset() -> bool
     builder.setChannelConversionAllowed(false);
     builder.setFormatConversionAllowed(false);
     builder.setCallback(this);
+
+    applyApiPolicy(builder);
 
     if(mDevice->mFlags.test(DeviceFlag::FrequencyRequest))
     {
@@ -304,6 +316,8 @@ void OboeCapture::open(std::string_view name)
         throw al::backend_exception{al::backend_error::DeviceError,
             "{} capture samples not supported", DevFmtTypeString(mDevice->FmtType)};
     }
+
+    applyApiPolicy(builder);
 
     if(const auto result = builder.openStream(mStream); result != oboe::Result::OK)
         throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: {}",
