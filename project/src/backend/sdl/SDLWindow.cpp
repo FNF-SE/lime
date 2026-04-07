@@ -540,6 +540,8 @@ namespace lime {
 
 	void SDLWindow::ContextFlip () {
 
+		if (SDLApplication::IsInBackground ()) return;
+
 		if (!sdlRenderer) {
 
 			#if defined(LIME_ANGLE) && defined(IPHONE)

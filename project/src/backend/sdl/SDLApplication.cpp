@@ -11,6 +11,7 @@
 #include "emscripten.h"
 #endif
 
+#include <atomic>
 #include <cmath>
 
 
@@ -19,7 +20,7 @@ namespace lime {
 
 	AutoGCRoot* Application::callback = 0;
 	SDLApplication* SDLApplication::currentApplication = 0;
-	bool inBackground = false;
+	static std::atomic<bool> inBackground = false;
 
 
 	const int analogAxisDeadZone = 1000;
@@ -37,6 +38,10 @@ namespace lime {
 	SDLApplication::SDLApplication () {
 
 		SDL_SetHint (SDL_HINT_JOYSTICK_HIDAPI, "1");
+
+		#ifdef __ANDROID__
+		SDL_SetHint (SDL_HINT_ANDROID_BLOCK_ON_PAUSE, "1");
+		#endif
 
 		#ifdef IPHONE
 		SDL_SetHint (SDL_HINT_IOS_HIDE_HOME_INDICATOR, "3");
@@ -788,6 +793,13 @@ namespace lime {
 	}
 
 
+	bool SDLApplication::IsInBackground () {
+
+		return inBackground;
+
+	}
+
+
 	bool SDLApplication::Update () {
 
 		SDL_Event event;
@@ -856,6 +868,7 @@ namespace lime {
 
 			case SDL_EVENT_WILL_ENTER_BACKGROUND:
 
+				inBackground = true;
 				return false;
 
 			case SDL_EVENT_DID_ENTER_BACKGROUND:
