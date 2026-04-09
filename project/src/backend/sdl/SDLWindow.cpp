@@ -540,7 +540,7 @@ namespace lime {
 
 	void SDLWindow::ContextFlip () {
 
-		if (SDLApplication::IsInBackground ()) return;
+		if (SDLApplication::isInBackground ()) return;
 
 		if (!sdlRenderer) {
 
