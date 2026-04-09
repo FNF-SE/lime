@@ -4647,6 +4647,7 @@ namespace lime {
 
 			#if defined(LIME_GLAD) && defined(LIME_SDL)
 			gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
+			gladLoadGLSC2((GLADloadfunc)SDL_GL_GetProcAddress);
 			#endif
 
 			initialized = true;
