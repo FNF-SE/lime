@@ -793,7 +793,7 @@ namespace lime {
 	}
 
 
-	bool SDLApplication::IsInBackground () {
+	bool SDLApplication::isInBackground () {
 
 		return inBackground;
 
