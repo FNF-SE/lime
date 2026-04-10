@@ -43,5 +43,4 @@ jobs:
             tools/tools.n
             run.n
             svg.n
-            templates/bin/lime.exe
           if-no-files-found: error
