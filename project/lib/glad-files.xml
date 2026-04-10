@@ -5,7 +5,7 @@
 		<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/glad/include/" />
 
 		<file name="${NATIVE_TOOLKIT_PATH}/glad/src/gles2.c" />
-		<file name="${NATIVE_TOOLKIT_PATH}/glad/src/glsc2.c" />
+		<!--<file name="${NATIVE_TOOLKIT_PATH}/glad/src/glsc2.c" />-->
 
 	</files>
 

@@ -11,6 +11,8 @@ import hxp.System;
 
 class HashlinkHelper
 {
+	public static inline var BUNDLED_HL_VER = "1.14.0";
+
 	public static function copyHashlink(project:HXProject, targetDirectory:String, applicationDirectory:String, executablePath:String, ?is64 = true)
 	{
 		var platform = project.target;
@@ -121,6 +123,10 @@ class HashlinkHelper
 			appMainCText = appMainCText.substr(0, index) + "
 // --------- START LIME HL/C INJECTED CODE --------- //
 // undefine things to avoid Haxe field name conflicts
+#undef String
+#undef small
+#undef EFAULT
+#undef EINVAL
 #undef BIG_ENDIAN
 #undef LITTLE_ENDIAN
 #undef TRUE

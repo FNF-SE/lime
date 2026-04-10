@@ -6,6 +6,8 @@
 #ifdef ANDROID
 #include <android/native_window.h>
 #endif
+#include <vector>
+#include <cstring>
 
 namespace lime {
 
@@ -1332,6 +1334,13 @@ namespace lime {
 
 	}
 
+	bool SDLWindow::SetAlwaysOnTop (bool alwaysOnTop) {
+
+		SDL_SetWindowAlwaysOnTop (sdlWindow, alwaysOnTop);
+
+		return alwaysOnTop;
+
+	}
 
 	void SDLWindow::WarpMouse (int x, int y) {
 

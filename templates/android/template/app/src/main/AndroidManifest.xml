@@ -37,8 +37,8 @@
 			<intent-filter>
 
 				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
- 
- 			</intent-filter>
+
+			</intent-filter>
 
 			::foreach ANDROID_ACCEPT_FILE_INTENT::
 			<intent-filter>

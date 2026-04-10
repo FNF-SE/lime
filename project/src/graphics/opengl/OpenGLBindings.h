@@ -3,6 +3,7 @@
 
 #if defined(LIME_GLAD)
 	#include <glad/gles2.h>
+	//#include <glad/glsc2.h>
 #elif defined(LIME_ANGLE) && defined(IPHONE)
 	#define GL_GLEXT_PROTOTYPES 1
 	#include <GLES3/gl3.h>

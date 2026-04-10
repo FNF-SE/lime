@@ -387,7 +387,10 @@ class NativeWindow
 				var windowWidth = Std.int(parent.__width * parent.__scale);
 				var windowHeight = Std.int(parent.__height * parent.__scale);
 
-				var x, y, width, height;
+				var x:Int;
+				var y:Int;
+				var width:Int;
+				var height:Int;
 
 				if (rect != null)
 				{
@@ -433,16 +436,7 @@ class NativeWindow
 
 			default:
 				#if (!macro && lime_cffi)
-				#if !cs
 				imageBuffer = NativeCFFI.lime_window_read_pixels(handle, rect, new ImageBuffer(new UInt8Array(Bytes.alloc(0))));
-				#else
-				var data:Dynamic = NativeCFFI.lime_window_read_pixels(handle, rect, null);
-				if (data != null)
-				{
-					imageBuffer = new ImageBuffer(new UInt8Array(@:privateAccess new Bytes(data.data.length, data.data.b)), data.width, data.height,
-						data.bitsPerPixel);
-				}
-				#end
 				#end
 
 				if (imageBuffer != null)
@@ -754,6 +748,18 @@ class NativeWindow
 		return value;
 	}
 
+	public function setAlwaysOnTop(value:Bool):Bool
+	{
+		if (handle != null)
+		{
+			#if (!macro && lime_cffi)
+			NativeCFFI.lime_window_set_always_on_top(handle, value);
+			#end
+		}
+
+		return value;
+	}
+
 	public function warpMouse(x:Int, y:Int):Void
 	{
 		#if (!macro && lime_cffi)
@@ -783,7 +789,7 @@ class NativeWindow
 	}
 }
 
-#if (haxe_ver >= 4.0) private enum #else @:enum private #end abstract MouseCursorType(Int) from Int to Int
+private enum abstract MouseCursorType(Int) from Int to Int
 {
 	var HIDDEN = 0;
 	var ARROW = 1;
@@ -800,7 +806,7 @@ class NativeWindow
 	var WAIT_ARROW = 12;
 }
 
-#if (haxe_ver >= 4.0) private enum #else @:enum private #end abstract WindowFlags(Int)
+private enum abstract WindowFlags(Int)
 {
 	var WINDOW_FLAG_FULLSCREEN = 0x00000001;
 	var WINDOW_FLAG_TRANSPARENT = 0x00000002;

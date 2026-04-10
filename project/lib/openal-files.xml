@@ -1,5 +1,9 @@
 <xml>
 
+    <section if="android LIME_OPENALSOFT">
+        <error value="NDK version 20 or higher is required." unless="NDKV20+" />
+    </section>
+
     <files id="native-toolkit-openal">
 
         <section>
@@ -57,7 +61,7 @@
 
         <section>
 
-            <section if="windows">
+            <section if="windows" unless="mingw">
 
                 <compilerflag value="-DNOMINMAX" />
 
@@ -69,7 +73,7 @@
 
             <compilerflag value="-Wno-switch" if="android" />
 
-            <section if="linux">
+            <section if="linux || mingw">
 
                 <compilerflag value="-Wno-interference-size" />
 
@@ -77,7 +81,7 @@
 
                 <section unless="HXCPP_ARM64 || HXCPP_ARMV7">
                     <compilerflag value="-mmmx" />
-		            <compilerflag value="-msse" />
+			<compilerflag value="-msse" />
                     <compilerflag value="-msse2" />
 		            <compilerflag value="-msse3" />
 		            <compilerflag value="-mssse3" />

@@ -8,23 +8,25 @@
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	::end::
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIColorName</key>
-		<string>launchScreenBackground</string>
-	</dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-	<key>LSApplicationCategoryType</key>
-	<string>::CATEGORY_TYPE::</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>To play with controller accept bluetooth permission.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	::if (languages != null)::<key>CFBundleLocalizations</key>
 	<array>::foreach languages::
 		<string>::__current__::</string>::end::
 	</array>::end::
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>launchScreenBackground</string>
+	</dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>To play with controller accept bluetooth permission.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth is required to connect and use controllers.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>CFBundleDisplayName</key>
 	<string>::APP_TITLE::</string>
 	<key>CFBundleExecutable</key>
@@ -43,8 +45,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>::APP_BUILD_NUMBER::</string>
+	<key>LSApplicationCategoryType</key>
+	<string>::CATEGORY_TYPE::</string>
 	<key>GCSupportsGameMode</key>
-	<true />
+	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	::if (IOS_LAUNCH_STORYBOARD != null)::<key>UILaunchStoryboardName</key>

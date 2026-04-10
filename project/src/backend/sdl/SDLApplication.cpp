@@ -180,6 +180,17 @@ namespace lime {
 				ProcessGamepadEvent (event);
 				break;
 
+			case SDL_EVENT_DISPLAY_ORIENTATION:
+
+				// this is the orientation of what is rendered, which
+				// may not exactly match the orientation of the device,
+				// if the app was locked to portrait or landscape.
+				orientationEvent.type = DISPLAY_ORIENTATION_CHANGE;
+				orientationEvent.orientation = event->display.data1;
+				orientationEvent.display = event->display.displayID;
+				OrientationEvent::Dispatch (&orientationEvent);
+				break;
+
 			case SDL_EVENT_DROP_FILE:
 			case SDL_EVENT_DROP_TEXT:
 			case SDL_EVENT_DROP_BEGIN:

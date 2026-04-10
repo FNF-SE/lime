@@ -11,16 +11,12 @@ import lime.tools.Architecture;
 import lime.tools.AssetHelper;
 import lime.tools.AssetType;
 import lime.tools.CPPHelper;
-import lime.tools.CSHelper;
 import lime.tools.DeploymentHelper;
 import lime.tools.GUID;
 import lime.tools.HashlinkHelper;
 import lime.tools.HXProject;
 import lime.tools.Icon;
 import lime.tools.IconHelper;
-import lime.tools.JavaHelper;
-import lime.tools.NekoHelper;
-import lime.tools.NodeJSHelper;
 import lime.tools.Orientation;
 import lime.tools.Platform;
 import lime.tools.PlatformTarget;
@@ -113,35 +109,32 @@ class MacPlatform extends PlatformTarget
 			project.architectures.remove(excludeArchitecture);
 		}
 
-		targetArchitecture = Type.createEnum(Architecture, Type.enumConstructor(System.hostArchitecture));
+		targetArchitecture = System.hostArchitecture;
 		for (architecture in project.architectures)
 		{
-			if (architecture.match(X86 | X64 | ARMV6 | ARMV7 | ARM64))
+			if (architecture.isARM() || architecture.isX())
 			{
 				targetArchitecture = architecture;
 				break;
 			}
 		}
 
-		if (project.targetFlags.exists("neko") || project.target != System.hostPlatform)
-		{
-			targetType = "neko";
-		}
-		else if (project.targetFlags.exists("hl") || project.targetFlags.exists("hlc"))
+		if (project.targetFlags.exists("hl") || project.targetFlags.exists("hlc"))
 		{
 			targetType = "hl";
-		}
-		else if (project.targetFlags.exists("java"))
-		{
-			targetType = "java";
-		}
-		else if (project.targetFlags.exists("nodejs"))
-		{
-			targetType = "nodejs";
-		}
-		else if (project.targetFlags.exists("cs"))
-		{
-			targetType = "cs";
+			var hlVer = project.haxedefs.get("hl-ver");
+			if (hlVer == null)
+			{
+				var hlPath = project.defines.get("HL_PATH");
+				if (hlPath == null)
+				{
+					// Haxe's default target version for HashLink may be
+					// different (newer even) than the build of HashLink that
+					// is bundled with Lime. if using Lime's bundled HashLink,
+					// set hl-ver to the correct version
+					project.haxedefs.set("hl-ver", HashlinkHelper.BUNDLED_HL_VER);
+				}
+			}
 		}
 		else
 		{
@@ -177,37 +170,19 @@ class MacPlatform extends PlatformTarget
 			}
 		}
 
-		if (!project.targetFlags.exists("static") || targetType != "cpp")
+		for (ndll in project.ndlls)
 		{
-			var targetSuffix = (targetType == "hl") ? ".hdll" : null;
-
-			for (ndll in project.ndlls)
+			if (targetType == "hl")
 			{
-				// TODO: Support single binary for HashLink
-				if (targetType == "hl")
-				{
-					ProjectHelper.copyLibrary(project, ndll, "Mac" + dirSuffix, "", ".hdll", executableDirectory, project.debug, targetSuffix);
-				}
-				else
-				{
-					ProjectHelper.copyLibrary(project, ndll, "Mac" + dirSuffix, "",
-						(ndll.haxelib != null
-							&& (ndll.haxelib.name == "hxcpp" || ndll.haxelib.name == "hxlibc")) ? ".dll" : ".ndll", executableDirectory,
-						project.debug, targetSuffix);
-				}
+				ProjectHelper.copyLibrary(project, ndll, "Mac" + dirSuffix, "", ".hdll", executableDirectory, project.debug, ".hdll");
+			}
+			else
+			{
+				ProjectHelper.copyLibrary(project, ndll, "Mac" + dirSuffix, "", ".ndll", executableDirectory, project.debug);
 			}
 		}
 
-		if (targetType == "neko")
-		{
-			System.runCommand("", "haxe", [hxml]);
-
-			if (noOutput) return;
-
-			NekoHelper.createExecutable(project.templatePaths, "mac" + dirSuffix.toLowerCase(), targetDirectory + "/obj/ApplicationMain.n", executablePath);
-			NekoHelper.copyLibraries(project.templatePaths, "mac" + dirSuffix.toLowerCase(), executableDirectory);
-		}
-		else if (targetType == "hl")
+		if (targetType == "hl")
 		{
 			System.runCommand("", "haxe", [hxml]);
 
@@ -273,43 +248,6 @@ class MacPlatform extends PlatformTarget
 				System.runCommand("", "chmod", ["755", executablePath]);
 			}
 		}
-		else if (targetType == "java")
-		{
-			var libPath = Path.combine(Haxelib.getPath(new Haxelib("lime")), "templates/java/lib/");
-
-			System.runCommand("", "haxe", [hxml, "-java-lib", libPath + "disruptor.jar", "-java-lib", libPath + "lwjgl.jar"]);
-
-			if (noOutput) return;
-
-			Haxelib.runCommand(targetDirectory + "/obj", ["run", "hxjava", "hxjava_build.txt", "--haxe-version", "3103"]);
-			System.recursiveCopy(targetDirectory + "/obj/lib", Path.combine(executableDirectory, "lib"));
-			System.copyFile(targetDirectory + "/obj/ApplicationMain" + (project.debug ? "-Debug" : "") + ".jar",
-				Path.combine(executableDirectory, project.app.file + ".jar"));
-			JavaHelper.copyLibraries(project.templatePaths, "Mac" + dirSuffix, executableDirectory);
-		}
-		else if (targetType == "nodejs")
-		{
-			System.runCommand("", "haxe", [hxml]);
-
-			if (noOutput) return;
-
-			// NekoHelper.createExecutable (project.templatePaths, "Mac" + dirSuffix, targetDirectory + "/obj/ApplicationMain.n", executablePath);
-			// NekoHelper.copyLibraries (project.templatePaths, "Mac" + dirSuffix, executableDirectory);
-		}
-		else if (targetType == "cs")
-		{
-			System.runCommand("", "haxe", [hxml]);
-
-			if (noOutput) return;
-
-			CSHelper.copySourceFiles(project.templatePaths, targetDirectory + "/obj/src");
-			var txtPath = targetDirectory + "/obj/hxcs_build.txt";
-			CSHelper.addSourceFiles(txtPath, CSHelper.ndllSourceFiles);
-			CSHelper.addGUID(txtPath, GUID.uuid());
-			CSHelper.compile(project, targetDirectory + "/obj", targetDirectory + "/obj/ApplicationMain" + (project.debug ? "-debug" : ""), "x64", "desktop");
-			System.copyFile(targetDirectory + "/obj/ApplicationMain" + (project.debug ? "-debug" : "") + ".exe", executablePath + ".exe");
-			File.saveContent(executablePath, "#!/bin/sh\nmono ${PWD}/" + project.app.file + ".exe");
-		}
 		else
 		{
 			var haxeArgs = [hxml, "-D", "HXCPP_CLANG"];
@@ -328,40 +266,18 @@ class MacPlatform extends PlatformTarget
 				flags.push("-DHXCPP_ARM64");
 			}
 
-			if (!project.targetFlags.exists("static"))
-			{
-				System.runCommand("", "haxe", haxeArgs);
+			System.runCommand("", "haxe", haxeArgs);
 
-				if (noOutput) return;
+			if (noOutput) return;
 
-				CPPHelper.compile(project, targetDirectory + "/obj", flags);
+			CPPHelper.compile(project, targetDirectory + "/obj", flags);
 
-				System.copyFile(targetDirectory + "/obj/ApplicationMain" + (project.debug ? "-debug" : ""), executablePath);
-			}
-			else
-			{
-				System.runCommand("", "haxe", haxeArgs.concat(["-D", "static_link"]));
-
-				if (noOutput) return;
-
-				CPPHelper.compile(project, targetDirectory + "/obj", flags.concat(["-Dstatic_link"]));
-				CPPHelper.compile(project, targetDirectory + "/obj", flags, "BuildMain.xml");
-
-				System.copyFile(targetDirectory + "/obj/Main" + (project.debug ? "-debug" : ""), executablePath);
-			}
+			System.copyFile(targetDirectory + "/obj/ApplicationMain" + (project.debug ? "-debug" : ""), executablePath);
 		}
 
-		if (System.hostPlatform != WINDOWS && targetType != "nodejs" && targetType != "java" && sys.FileSystem.exists(executablePath))
+		if (System.hostPlatform != WINDOWS && sys.FileSystem.exists(executablePath))
 		{
 			System.runCommand("", "chmod", ["755", executablePath]);
-		}
-	}
-
-	public override function clean():Void
-	{
-		if (FileSystem.exists(targetDirectory))
-		{
-			System.removeDirectory(targetDirectory);
 		}
 	}
 
@@ -395,7 +311,7 @@ class MacPlatform extends PlatformTarget
 		return context;
 	}
 
-	private function getDisplayHXML():HXML
+	private override function getDisplayHXML():HXML
 	{
 		var path = targetDirectory + "/haxe/" + buildType + ".hxml";
 
@@ -417,12 +333,6 @@ class MacPlatform extends PlatformTarget
 			{
 				case "hl":
 					hxml.hl = "_.hl";
-				case "neko":
-					hxml.neko = "_.n";
-				case "java":
-					hxml.java = "_";
-				case "nodejs":
-					hxml.js = "_.js";
 				default:
 					hxml.cpp = "_";
 			}
@@ -433,7 +343,7 @@ class MacPlatform extends PlatformTarget
 
 	public override function rebuild():Void
 	{
-		var commands = [];
+		var commands:Array<Array<String>> = [];
 
 		switch (System.hostArchitecture)
 		{
@@ -492,15 +402,7 @@ class MacPlatform extends PlatformTarget
 			arguments.push("-verbose");
 		}
 
-		if (targetType == "nodejs")
-		{
-			NodeJSHelper.run(project, executableDirectory + "/ApplicationMain.js", arguments);
-		}
-		else if (targetType == "java")
-		{
-			System.runCommand(executableDirectory, "java", ["-jar", project.app.file + ".jar"].concat(arguments));
-		}
-		else if (project.target == System.hostPlatform)
+		if (project.target == System.hostPlatform)
 		{
 			arguments = arguments.concat(["-livereload"]);
 			System.runCommand(executableDirectory, "./" + Path.withoutDirectory(executablePath), arguments);
@@ -511,39 +413,18 @@ class MacPlatform extends PlatformTarget
 	{
 		AssetHelper.processLibraries(project, targetDirectory);
 
-		// project = project.clone ();
-
 		if (project.targetFlags.exists("xml"))
 		{
-			project.haxeflags.push("-xml " + targetDirectory + "/types.xml");
+			project.haxeflags.push("--xml " + targetDirectory + "/types.xml");
 		}
 
-		for (asset in project.assets)
+		if (project.targetFlags.exists("json"))
 		{
-			if (asset.embed && asset.sourcePath == "")
-			{
-				var path = Path.combine(targetDirectory + "/obj/tmp", asset.targetPath);
-				System.mkdir(Path.directory(path));
-				AssetHelper.copyAsset(asset, path);
-				asset.sourcePath = path;
-			}
+			project.haxeflags.push("--json " + targetDirectory + "/types.json");
 		}
 
 		var context = generateContext();
 		context.OUTPUT_DIR = targetDirectory;
-
-		if (targetType == "cpp" && project.targetFlags.exists("static"))
-		{
-			for (i in 0...project.ndlls.length)
-			{
-				var ndll = project.ndlls[i];
-
-				if (ndll.path == null || ndll.path == "")
-				{
-					context.ndlls[i].path = NDLL.getLibraryPath(ndll, "Mac" + dirSuffix, "lib", ".a", project.debug);
-				}
-			}
-		}
 
 		System.mkdir(targetDirectory);
 		System.mkdir(targetDirectory + "/obj");
@@ -551,22 +432,11 @@ class MacPlatform extends PlatformTarget
 		System.mkdir(applicationDirectory);
 		System.mkdir(contentDirectory);
 
-		// SWFHelper.generateSWFClasses (project, targetDirectory + "/haxe");
-
 		ProjectHelper.recursiveSmartCopyTemplate(project, "haxe", targetDirectory + "/haxe", context);
 		ProjectHelper.recursiveSmartCopyTemplate(project, targetType + "/hxml", targetDirectory + "/haxe", context);
 
-		if (targetType == "cpp" && project.targetFlags.exists("static"))
-		{
-			ProjectHelper.recursiveSmartCopyTemplate(project, "cpp/static", targetDirectory + "/obj", context);
-		}
-
 		System.copyFileTemplate(project.templatePaths, "mac/Info.plist", targetDirectory + "/bin/" + project.app.file + ".app/Contents/Info.plist", context);
-		System.copyFileTemplate(project.templatePaths, "mac/Entitlements.plist",
-			targetDirectory
-			+ "/bin/"
-			+ project.app.file
-			+ ".app/Contents/Entitlements.plist", context);
+		System.copyFileTemplate(project.templatePaths, "mac/Entitlements.plist", targetDirectory + "/bin/" + project.app.file + ".app/Contents/Entitlements.plist", context);
 
 		var icons = project.icons;
 
@@ -577,37 +447,7 @@ class MacPlatform extends PlatformTarget
 
 		context.HAS_ICON = IconHelper.createMacIcon(icons, Path.combine(contentDirectory, "icon.icns"));
 
-		for (asset in project.assets)
-		{
-			if (asset.embed != true)
-			{
-				if (asset.type != AssetType.TEMPLATE)
-				{
-					System.mkdir(Path.directory(Path.combine(contentDirectory, asset.targetPath)));
-					AssetHelper.copyAssetIfNewer(asset, Path.combine(contentDirectory, asset.targetPath));
-				}
-				else
-				{
-					System.mkdir(Path.directory(Path.combine(targetDirectory, asset.targetPath)));
-					AssetHelper.copyAsset(asset, Path.combine(targetDirectory, asset.targetPath), context);
-				}
-			}
-		}
-	}
-
-	public override function watch():Void
-	{
-		var hxml = getDisplayHXML();
-		var dirs = hxml.getClassPaths(true);
-
-		var outputPath = Path.combine(Sys.getCwd(), project.app.path);
-		dirs = dirs.filter(function(dir)
-		{
-			return (!Path.startsWith(dir, outputPath));
-		});
-
-		var command = ProjectHelper.getCurrentCommand();
-		System.watch(command, dirs);
+		copyProjectAssets(targetDirectory, contentDirectory);
 	}
 
 	@ignore public override function install():Void {}
@@ -646,6 +486,16 @@ class MacPlatform extends PlatformTarget
 		var limeDirectory = Haxelib.getPath(new Haxelib("lime"), true);
 		var bindir = "Mac64";
 		var bundledHLDirectory = Path.combine(limeDirectory, 'templates/bin/hl/$bindir');
+		if (!FileSystem.exists(bundledHLDirectory))
+		{
+			Log.error('Directory does not exist: $bundledHLDirectory');
+			return;
+		}
+		if (!FileSystem.isDirectory(bundledHLDirectory))
+		{
+			Log.error('Not a directory: $bundledHLDirectory');
+			return;
+		}
 
 		// these are the known directories where Homebrew installs its dependencies
 		// we may need to add more in the future, but this seems to be enough for now
@@ -717,7 +567,7 @@ class MacPlatform extends PlatformTarget
 								continue;
 							}
 						}
-						if (Lambda.exists(homebrewDirs, dirPath -> StringTools.startsWith(resolvedLibPath, dirPath)))
+						if (Lambda.exists(homebrewDirs, function(dirPath:String):Bool { return StringTools.startsWith(resolvedLibPath, dirPath); }))
 						{
 							homebrewDependencyPaths.push(libPath);
 							pathsToSearchForHomebrewDependencies.push(resolvedLibPath);

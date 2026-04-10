@@ -8,5 +8,3 @@
 -cp ../src
 -lib format
 -lib hxp
-#-lib svg
--D optional-cffi

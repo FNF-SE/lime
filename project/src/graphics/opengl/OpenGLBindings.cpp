@@ -16,7 +16,6 @@ namespace lime {
 
 	bool OpenGLBindings::initialized = false;
 
-
 	std::map<GLObjectType, std::map <GLuint, void*> > glObjects;
 	std::map<void*, GLuint> glObjectIDs;
 	std::map<void*, void*> glObjectPtrs;
@@ -4647,7 +4646,7 @@ namespace lime {
 
 			#if defined(LIME_GLAD) && defined(LIME_SDL)
 			gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
-			gladLoadGLSC2((GLADloadfunc)SDL_GL_GetProcAddress);
+			//gladLoadGLSC2((GLADloadfunc)SDL_GL_GetProcAddress);
 			#endif
 
 			initialized = true;

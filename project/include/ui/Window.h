@@ -69,6 +69,7 @@ namespace lime {
 			virtual void SetTextInputRect (Rectangle *rect) = 0;
 			virtual const char* SetTitle (const char* title) = 0;
 			virtual bool SetVisible (bool visible) = 0;
+			virtual bool SetAlwaysOnTop (bool alwaysOnTop) = 0;
 			virtual void WarpMouse (int x, int y) = 0;
 			virtual double GetDrawScale () = 0;
 			virtual int GetNativeWidth () = 0;
@@ -106,6 +107,7 @@ namespace lime {
 		WINDOW_FLAG_COLOR_DEPTH_32_BIT = 0x00020000
 
 	};
+
 }
 
 

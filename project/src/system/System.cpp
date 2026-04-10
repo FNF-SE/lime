@@ -9,9 +9,6 @@
 
 #include <system/System.h>
 
-#ifndef __NFDBITS
-#define __NFDBITS (8 * sizeof(unsigned long))
-#endif
 
 namespace lime {
 
@@ -69,7 +66,7 @@ namespace lime {
 	}
 
 
-	#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+	#if defined (HX_WINDOWS)
 	std::wstring* GetWMIValue (BSTR query, BSTR field) {
 
 		HRESULT hres = 0;
@@ -166,8 +163,8 @@ namespace lime {
 
 	std::wstring* System::GetDeviceModel () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
-		return GetWMIValue (bstr_t (L"SELECT * FROM Win32_ComputerSystemProduct"), bstr_t (L"Version"));
+		#if defined (HX_WINDOWS)
+		return GetWMIValue (_bstr_t(L"SELECT * FROM Win32_ComputerSystemProduct"), _bstr_t(L"Version"));
 		#endif
 
 		return NULL;
@@ -177,8 +174,8 @@ namespace lime {
 
 	std::wstring* System::GetDeviceVendor () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
-		return GetWMIValue (bstr_t (L"SELECT * FROM Win32_ComputerSystemProduct"), bstr_t (L"Vendor"));
+		#if defined (HX_WINDOWS)
+		return GetWMIValue (_bstr_t(L"SELECT * FROM Win32_ComputerSystemProduct"), _bstr_t(L"Vendor"));
 		#endif
 
 		return NULL;
@@ -188,8 +185,8 @@ namespace lime {
 
 	std::wstring* System::GetPlatformLabel () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
-		return GetWMIValue (bstr_t (L"SELECT * FROM Win32_OperatingSystem"), bstr_t (L"Caption"));
+		#if defined (HX_WINDOWS)
+		return GetWMIValue (_bstr_t(L"SELECT * FROM Win32_OperatingSystem"), _bstr_t(L"Caption"));
 		#endif
 
 		return NULL;
@@ -206,8 +203,8 @@ namespace lime {
 
 	std::wstring* System::GetPlatformVersion () {
 
-		#if defined (HX_WINDOWS) && !defined (HX_WINRT)
-		return GetWMIValue (bstr_t (L"SELECT * FROM Win32_OperatingSystem"), bstr_t (L"Version"));
+		#if defined (HX_WINDOWS)
+		return GetWMIValue (_bstr_t(L"SELECT * FROM Win32_OperatingSystem"), _bstr_t(L"Version"));
 		#endif
 
 		return NULL;
@@ -215,7 +212,7 @@ namespace lime {
 	}
 
 
-	#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+	#if defined (HX_WINDOWS)
 	int System::GetWindowsConsoleMode (int handleType) {
 
 		HANDLE handle = GetStdHandle ((DWORD)handleType);
@@ -233,7 +230,7 @@ namespace lime {
 	#endif
 
 
-	#if defined (HX_WINDOWS) && !defined (HX_WINRT)
+	#if defined (HX_WINDOWS)
 	bool System::SetWindowsConsoleMode (int handleType, int mode) {
 
 		HANDLE handle = GetStdHandle ((DWORD)handleType);

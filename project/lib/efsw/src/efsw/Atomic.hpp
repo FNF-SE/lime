@@ -3,53 +3,31 @@
 
 #include <efsw/base.hpp>
 
-#ifdef EFSW_USE_CXX11
 #include <atomic>
-#endif
 
 namespace efsw {
 
-template <typename T>
-class Atomic
-{
-	public:
-		explicit Atomic(T set = false)
-			: set_(set) {}
+template <typename T> class Atomic {
+  public:
+	explicit Atomic( T set = false ) : set_( set ) {}
 
-		Atomic& operator= (T set) {
-#ifdef EFSW_USE_CXX11
-			set_.store(set, std::memory_order_release);
-#else
-			set_ = set;
-#endif
-			return *this;
-		}
+	Atomic& operator=( T set ) {
+		set_.store( set, std::memory_order_release );
+		return *this;
+	}
 
-		explicit operator T() const {
-#ifdef EFSW_USE_CXX11
-			return set_.load(std::memory_order_acquire);
-#else
-			return set_;
-#endif
-		}
+	explicit operator T() const {
+		return set_.load( std::memory_order_acquire );
+	}
 
-		T load() const {
-#ifdef EFSW_USE_CXX11
-			return set_.load(std::memory_order_acquire);
-#else
-			return set_;
-#endif
-		}
+	T load() const {
+		return set_.load( std::memory_order_acquire );
+	}
 
-	private:
-#ifdef EFSW_USE_CXX11
-		std::atomic<T> set_;
-#else
-		volatile T set_;
-#endif
+  private:
+	std::atomic<T> set_;
 };
 
-}
+} // namespace efsw
 
 #endif
-
