@@ -35,8 +35,6 @@ jobs:
           haxe svg.hxml
           haxe run.hxml
           haxe tools.hxml
-          haxe alias.hxml
-          cp obj/lime/AliasScript.exe ../templates/bin/lime.exe
       - name: Upload Artifact
         uses: actions/upload-artifact@main
         with:
